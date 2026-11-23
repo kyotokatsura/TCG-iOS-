@@ -1,6 +1,6 @@
 {
   "name": "LTC Generator",
-  "short_name": "LTC",
+  "short_name": "LTC GEN",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LTC">
+<meta name="theme-color" content="#111317">
+<title>LTC Generator (iPhone)</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  :root {
+    --bg: #111317; --panel: #1b1e24; --line: #3a3f47; --fg: #e8eaed; --dim: #8a9099;
+    --acc: #ff4b3e; --amber: #ffb15c;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); overflow-x: hidden; max-width: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif; }
+  body { padding: calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 14px)
+                  calc(env(safe-area-inset-bottom) + 20px) calc(env(safe-area-inset-left) + 14px); }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  .head { font-size: 11px; font-weight: 700; color: var(--dim); letter-spacing: .02em; }
+  .tc { font-family: var(--mono); font-weight: 800; color: #fff; line-height: 1.05;
+        font-size: 48px; margin: 6px 0 4px; font-variant-numeric: tabular-nums;
+        white-space: nowrap; letter-spacing: -.02em; overflow: hidden; }
+  .sub { font-family: var(--mono); font-size: 12px; color: var(--dim); white-space: pre-wrap; min-height: 1.3em; overflow-wrap: anywhere; }
+  .sub.warn { color: var(--amber); }
+  .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 700; color: var(--fg); background: var(--panel);
+           border: 2px solid var(--line); border-radius: 8px; padding: 9px 10px; cursor: pointer;
+           touch-action: manipulation; }
+  button:active { filter: brightness(1.25); }
+  .start { background: var(--acc); border-color: var(--acc); color: #fff; font-size: 17px;
+           flex: 1 1 0; min-width: 0; padding: 12px 10px; }
+  .start.on { background: var(--panel); color: var(--acc); }
+  .lamp { width: 12px; height: 12px; border-radius: 50%; background: #3a3f47; flex: 0 0 auto; }
+  .lamp.on { background: var(--acc); }
+  .regen { font-size: 12px; line-height: 1.15; color: var(--dim); width: 70px; padding: 6px 4px; flex: 0 0 auto; }
+  .regen.on { background: var(--amber); border-color: var(--amber); color: #1a1408; }
+  .row.nw { flex-wrap: nowrap; }
+  .row.nw input { flex: 1 1 0; min-width: 0; width: 0; }
+  .row.nw button { flex: 0 0 auto; padding: 9px 10px; }
+  .cap { font-size: 12px; color: var(--dim); margin: 14px 0 -6px; }
+  .card .cap { margin-top: 14px; }
+  @media (max-width: 380px) {
+    .row.nw button, #pcBtn { font-size: 14px; padding: 8px 8px; }
+    input[type=text], input[type=number] { font-size: 16px; padding: 8px 6px; }
+    .seg button { padding: 8px 10px; }
+  }
+  .red { color: var(--acc); border-color: var(--acc); }
+  .pend { color: var(--amber); border-color: var(--amber); }
+  .label { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .card .label { white-space: normal; }
+  .seg { display: inline-flex; border: 2px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 8px 12px; color: var(--dim); }
+  .seg button.sel { background: #2b3038; color: var(--fg); }
+  input[type=text], input[type=number] {
+    font-family: var(--mono); font-size: 17px; color: var(--fg); background: #0c0d10;
+    border: 1px solid var(--line); border-radius: 6px; padding: 8px 8px; width: 9.2em; }
+  input.bad { border-color: var(--acc); }
+  input[type=number] { width: 6em; }
+  .card { background: var(--panel); border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+  .card .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .card .top b { font-size: 16px; }
+  .card .top span { font-size: 15px; color: var(--dim); }
+  .card .top span.val { color: var(--fg); font-weight: 700; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 30px;
+                      background: transparent; margin: 8px 0 0; }
+  input[type=range]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px;
+      background: linear-gradient(to right, var(--acc) var(--p, 50%), #3a3f47 var(--p, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px;
+      border-radius: 50%; background: var(--acc); margin-top: -8px; border: 0; }
+  input[type=range]::-moz-range-track { height: 8px; border-radius: 4px; background: #3a3f47; }
+  input[type=range]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--acc); }
+  input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--acc); border: 0; }
+  .chk { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; user-select: none; cursor: pointer; }
+  .chk i { width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--line); display: inline-grid;
+           place-items: center; font-style: normal; font-size: 14px; color: #fff; }
+  .chk.on i { background: var(--acc); border-color: var(--acc); }
+  .status { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 14px; white-space: pre-wrap; line-height: 1.5; overflow-wrap: anywhere; }
+  .note { font-size: 12px; color: var(--dim); margin-top: 14px; line-height: 1.6; }
+  .note b { color: var(--fg); }
+  .msg { font-size: 12.5px; color: var(--amber); margin-top: 6px; min-height: 1em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head" id="head">PC TIME → AUDIO LTC · 29.97 fps DROP FRAME</div>
+  <div class="tc"><span id="tc">--:--:--;--</span></div>
+  <div class="sub" id="clock">PC TIME</div>
+  <div class="sub" id="diff"></div>
+
+  <div class="row">
+    <button class="start" id="startBtn">▶ 出力開始</button>
+    <div class="lamp" id="lamp"></div>
+    <button class="regen" id="regenBtn">REGEN<br>(JAM)</button>
+  </div>
+
+  <div class="row">
+    <span class="label">タイムコード</span>
+    <div class="seg" id="dfSeg"><button data-v="DF" class="sel">DF</button><button data-v="NDF">NDF</button></div>
+    <span class="chk" id="utcChk"><i></i>UTC</span>
+  </div>
+
+  <div class="cap">プリセット</div>
+  <div class="row nw">
+    <input type="text" id="preset" value="10:00:00;00" inputmode="numeric" autocomplete="off">
+    <button id="presetBtn">PRESET</button>
+    <button id="pstartBtn" class="red">START</button>
+  </div>
+  <div class="row">
+    <button id="pcBtn">PC TIMEに戻す</button>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <div class="card">
+    <div class="top"><b>出力レベル</b><span class="val" id="lvlVal">-10 dBFS</span></div>
+    <input type="range" id="lvl" min="-40" max="0" step="1" value="-10">
+  </div>
+
+  <div class="card">
+    <div class="row" style="margin-top:0">
+      <span class="label">出力チャンネル</span>
+      <div class="seg" id="chSeg"><button data-v="L">L</button><button data-v="R">R</button><button data-v="LR" class="sel">L+R</button></div>
+    </div>
+    <div class="cap">PC TIME補正（ms・＋で先行）</div>
+    <div class="row nw">
+      <input type="number" id="ofs" value="0" step="1" min="-2000" max="2000" inputmode="numeric">
+      <button id="ofsSet">補正</button>
+      <button id="ofsClr">補正無</button>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="note">
+    <b>使い方</b>：iPhone のイヤホン端子（Lightning／USB-C → 3.5mm 変換）や USB オーディオから LTC が出ます。<br>
+    ・出力中は<b>この画面を開いたまま</b>にしてください（画面ロック・別アプリに切り替えると止まります）。
+      自動ロックは「設定 → 画面表示と明るさ → 自動ロック → なし」にしておくと確実です。<br>
+    ・消音スイッチ（マナーモード）がオンでも出るようにしていますが、出ない場合はオフにしてください。<br>
+    ・受け側の TC が一定量ずれる場合は PC TIME補正で合わせます（REGEN・PRESET 中は無効）。<br>
+    ・iPhone の時計は「設定 → 一般 → 日付と時刻 → 自動設定」がオンだと正確です。
+  </div>
+</div>
+
+<script>
+"use strict";
+// ======================================================================= LTC コア（Python 版 ltc_core.py と同じ計算）
+const FPS = 30000 / 1001;
+const DF_DAY = 2589408, NDF_DAY = 24 * 3600 * 30;
+const SYNC = [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1];
+const mod = (a, b) => ((a % b) + b) % b;
+
+function frameToDF(n) {
+  n = mod(n, DF_DAY);
+  const d = Math.floor(n / 17982), m = n % 17982;
+  n += 18 * d + (m < 2 ? 0 : 2 * Math.floor((m - 2) / 1798));
+  return [Math.floor(n / 108000) % 24, Math.floor(n / 1800) % 60, Math.floor(n / 30) % 60, n % 30];
+}
+function labelToTC(m, drop) {
+  if (drop) return frameToDF(m);
+  m = mod(m, NDF_DAY);
+  return [Math.floor(m / 108000) % 24, Math.floor(m / 1800) % 60, Math.floor(m / 30) % 60, m % 30];
+}
+// 29.97 の実フレーム番号 → ラベル番号（NDF は 1000 フレームごとに PC 時刻へ合わせ直す）
+function frameLabel(n, drop) {
+  if (drop) return n;
+  const start = Math.floor(n / 1000) * 1000;
+  return Math.floor(start * 1001 / 1000) + (n - start);
+}
+function tcToLabel(tc, drop) {
+  const [hh, mm, ss, ff] = tc;
+  const nominal = (hh * 3600 + mm * 60 + ss) * 30 + ff;
+  if (!drop) return nominal;
+  const tm = hh * 60 + mm;
+  return nominal - 2 * (tm - Math.floor(tm / 10));
+}
+const p2 = v => String(v).padStart(2, "0");
+const tcString = (tc, drop) => `${p2(tc[0])}:${p2(tc[1])}:${p2(tc[2])}${drop ? ";" : ":"}${p2(tc[3])}`;
+
+function parseTC(text, drop) {
+  const t = text.trim();
+  let parts = null;
+  if (/[:;.,\s]/.test(t)) parts = t.split(/[:;.,\s]+/);
+  else if (/^\d{8}$/.test(t)) parts = [t.slice(0, 2), t.slice(2, 4), t.slice(4, 6), t.slice(6, 8)];
+  if (!parts || parts.length !== 4 || !parts.every(p => /^\d+$/.test(p))) throw new Error("hh:mm:ss:ff の形で入力してください");
+  let [hh, mm, ss, ff] = parts.map(Number);
+  if (!(hh < 24 && mm < 60 && ss < 60 && ff < 30)) throw new Error("範囲外です（時 0-23 / 分・秒 0-59 / フレーム 0-29）");
+  if (drop && ss === 0 && ff < 2 && mm % 10 !== 0) ff = 2;      // DF に無いラベルは ;02 に
+  return [hh, mm, ss, ff];
+}
+
+function buildWord(tc, drop) {
+  const [hh, mm, ss, ff] = tc, b = new Array(80).fill(0);
+  const put = (pos, val, len) => { for (let i = 0; i < len; i++) b[pos + i] = (val >> i) & 1; };
+  put(0, ff % 10, 4); put(8, Math.floor(ff / 10), 2);
+  b[10] = drop ? 1 : 0;
+  put(16, ss % 10, 4); put(24, Math.floor(ss / 10), 3);
+  put(32, mm % 10, 4); put(40, Math.floor(mm / 10), 3);
+  put(48, hh % 10, 4); put(56, Math.floor(hh / 10), 2);
+  for (let i = 0; i < 16; i++) b[64 + i] = SYNC[i];
+  if (b.reduce((a, v) => a + v, 0) % 2) b[27] = 1;               // 極性補正ビット
+  return b;
+}
+function biphase(bits) {                                           // 160 ハーフセル (+1/-1)
+  const h = new Float32Array(160);
+  let lvl = 1;
+  for (let i = 0; i < 80; i++) {
+    lvl = -lvl; h[2 * i] = lvl;
+    if (bits[i]) lvl = -lvl;
+    h[2 * i + 1] = lvl;
+  }
+  return h;
+}
+function gmtoff(epoch, utc) { return utc ? 0 : -new Date(epoch * 1000).getTimezoneOffset() * 60; }
+function ssm(epoch, utc) { return mod(epoch + gmtoff(epoch, utc), 86400); }
+
+// ======================================================================= 音声エンジン（Web Audio、バッファを時刻指定で並べる）
+class LTCOut {
+  constructor() {
+    this.ctx = null; this.running = false;
+    this.drop = true; this.utc = false; this.level = -10; this.chan = "LR";
+    this.userOffset = 0;          // 秒（PC TIME のときだけ使う）
+    this.off = null;              // AudioContext の時刻 → その音が鳴る実時刻（エポック秒）
+    this.offTarget = null;
+    this.est = [];
+    this.modes = [];              // [{tc0, freerun, P0}] 新しいものが後ろ
+    this.cache = new Map();
+    this.jams = 0; this.underruns = 0; this.tsSupported = false;
+    this.CHUNK = 2048; this.LOOKAHEAD = 0.22;
+  }
+  halves(m) {
+    const key = m * 2 + (this.drop ? 1 : 0);
+    let h = this.cache.get(key);
+    if (!h) {
+      h = biphase(buildWord(labelToTC(m, this.drop), this.drop));
+      this.cache.set(key, h);
+      if (this.cache.size > 64) this.cache.delete(this.cache.keys().next().value);
+    }
+    return h;
+  }
+  modeAt(t) {
+    for (let i = this.modes.length - 1; i >= 0; i--) if (t >= this.modes[i].tc0) return this.modes[i];
+    return this.modes[0];
+  }
+  // AudioContext 時刻 t の位置（ラベル番号＋フレーム内位置）
+  posAt(t, off, mode) {
+    mode = mode || this.modeAt(t);
+    if (mode.freerun) return mode.P0 + (t - mode.tc0) * FPS;
+    const e = t + off + this.userOffset;
+    const sec = mod(e + this._gm, 86400);
+    const f = sec * FPS, n = Math.floor(f);
+    return frameLabel(n, this.drop) + (f - n);
+  }
+  measure() {
+    const c = this.ctx; if (!c) return;
+    let e = null;
+    if (typeof c.getOutputTimestamp === "function") {
+      const ts = c.getOutputTimestamp();
+      if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+        const skew = Date.now() - (performance.timeOrigin + performance.now());   // 壁時計とのずれ
+        e = (performance.timeOrigin + ts.performanceTime + skew) / 1000 - ts.contextTime;
+        this.tsSupported = true;
+      }
+    }
+    if (e === null) e = Date.now() / 1000 - c.currentTime - (c.outputLatency || c.baseLatency || 0);
+    this.est.push(e);
+    if (this.est.length > 41) this.est.shift();
+    const s = [...this.est].sort((a, b) => a - b);
+    this.offTarget = s[Math.floor(s.length / 2)];
+  }
+  async start(origin) {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      try { this.ctx = new AC({ sampleRate: 48000, latencyHint: "interactive" }); }
+      catch (_) { this.ctx = new AC(); }
+    }
+    await this.ctx.resume();
+    this.sr = this.ctx.sampleRate;
+    this.est = []; this.jams = 0; this.underruns = 0; this.cache.clear();
+    for (let i = 0; i < 12; i++) { this.measure(); await new Promise(r => setTimeout(r, 25)); }
+    this.off = this.offTarget;
+    this.nextS = Math.ceil((this.ctx.currentTime + 0.12) * this.sr);
+    const t0 = this.nextS / this.sr;
+    this._gm = gmtoff(t0 + this.off, this.utc);
+    let m;
+    if (origin && origin.preset != null) m = { tc0: t0, freerun: true, P0: origin.preset };
+    else if (origin && origin.gen) m = { tc0: t0, freerun: true, P0: origin.gen.P + (t0 + this.off - origin.gen.e0) * FPS };
+    else if (origin && origin.regen) m = { tc0: t0, freerun: true, P0: this.posAt(t0, this.off, { freerun: false }) };
+    else m = { tc0: t0, freerun: false };
+    this.modes = [m];
+    this.startT = t0; this.running = true;
+    this.timer = setInterval(() => this.pump(), 20);
+    this.pump();
+  }
+  stop() {
+    this.running = false;
+    clearInterval(this.timer);
+    for (const s of this.sources || []) { try { s.stop(); } catch (_) {} }
+    this.sources = [];
+    if (this.ctx) this.ctx.suspend().catch(() => {});
+  }
+  // 次に作るバッファの先頭から新しい数え方にする
+  setMode(m) {
+    if (!this.running) return;
+    const t0 = this.nextS / this.sr;
+    m.tc0 = t0;
+    if (m.freerun && m.P0 == null) m.P0 = this.posAt(t0, this.off);
+    this.modes.push(m);
+    while (this.modes.length > 1 && this.modes[1].tc0 <= this.ctx.currentTime - 1) this.modes.shift();
+  }
+  pump() {
+    if (!this.running) return;
+    const c = this.ctx;
+    if (c.state !== "running") { c.resume().catch(() => {}); }
+    this.measure();
+    if (this.nextS / this.sr < c.currentTime + 0.01) {           // 間に合わなかった（画面ロック等）
+      this.underruns++;
+      this.nextS = Math.ceil((c.currentTime + 0.1) * this.sr);
+    }
+    this.sources = (this.sources || []).filter(s => s._end > c.currentTime);
+    while (this.nextS / this.sr < c.currentTime + this.LOOKAHEAD) this.renderChunk();
+  }
+  renderChunk() {
+    const c = this.ctx, N = this.CHUNK, sr = this.sr, s0 = this.nextS, t0 = s0 / sr;
+    // 時刻の対応を少しずつ寄せる（最大 200ppm）。大きくずれたら一気に合わせる（JAM）
+    const off0 = this.off;
+    let off1 = off0;
+    const mode = this.modeAt(t0), pcMode = !mode.freerun;
+    const err = this.offTarget - off0;
+    if (Math.abs(err) > 0.02) {
+      this.off = this.offTarget;
+      if (pcMode && t0 - this.startT > 2) this.jams++;
+    } else {
+      const step = Math.max(-N / sr * 2e-4, Math.min(N / sr * 2e-4, err));
+      off1 = off0 + step;
+      this.off = off1;
+    }
+    const offA = Math.abs(err) > 0.02 ? this.off : off0, offB = this.off;
+    this._gm = gmtoff(t0 + offA, this.utc);
+    const buf = c.createBuffer(2, N, sr);
+    const L = buf.getChannelData(0), R = buf.getChannelData(1);
+    const amp = Math.pow(10, this.level / 20);
+    const nextMode = this.modes.find(m => m.tc0 > t0 && m.tc0 < t0 + N / sr);
+    let curM = -1, curH = null;
+    for (let i = 0; i < N; i++) {
+      const t = (s0 + i) / sr;
+      const md = (nextMode && t >= nextMode.tc0) ? nextMode : mode;
+      const P = this.posAt(t, offA + (offB - offA) * (i / N), md);
+      const m = Math.floor(P);
+      if (m !== curM) { curM = m; curH = this.halves(m); }
+      let hi = Math.floor((P - m) * 160); if (hi > 159) hi = 159;
+      const v = curH[hi] * amp;
+      L[i] = this.chan !== "R" ? v : 0;
+      R[i] = this.chan !== "L" ? v : 0;
+    }
+    const src = c.createBufferSource();
+    src.buffer = buf; src.connect(c.destination); src.start(t0);
+    src._end = t0 + N / sr;
+    (this.sources = this.sources || []).push(src);
+    this.nextS += N;
+  }
+  // 今まさに鳴っている位置
+  onAir() {
+    if (!this.running || this.offTarget == null) return null;
+    const t = Date.now() / 1000 - this.offTarget;
+    if (t < this.startT) return null;
+    this._gm = gmtoff(t + this.off, this.utc);
+    return this.posAt(t, this.off);
+  }
+}
+
+// ======================================================================= 画面
+const $ = id => document.getElementById(id);
+const eng = new LTCOut();
+const st = { regen: false, hold: null, gen: null, drop: true, utc: false, msg: "" };
+const AMBER = "#ffb15c";
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem("ltc_ios") || "{}");
+    if (s.drop === false) st.drop = false;
+    if (s.utc) st.utc = true;
+    if (typeof s.level === "number") $("lvl").value = s.level;
+    if (s.chan) eng.chan = s.chan;
+    if (typeof s.ofs === "number") { eng.userOffset = s.ofs / 1000; $("ofs").value = s.ofs; }
+    if (s.preset) $("preset").value = s.preset;
+  } catch (_) {}
+}
+function save() {
+  try {
+    localStorage.setItem("ltc_ios", JSON.stringify({ drop: st.drop, utc: st.utc, level: +$("lvl").value,
+      chan: eng.chan, ofs: Math.round(eng.userOffset * 1000), preset: $("preset").value }));
+  } catch (_) {}
+}
+
+function setSeg(id, v) { for (const b of $(id).children) b.classList.toggle("sel", b.dataset.v === v); }
+function applyUI() {
+  eng.drop = st.drop; eng.utc = st.utc; eng.level = +$("lvl").value;
+  setSeg("dfSeg", st.drop ? "DF" : "NDF");
+  setSeg("chSeg", eng.chan);
+  $("utcChk").classList.toggle("on", st.utc); $("utcChk").firstChild.textContent = st.utc ? "✓" : "";
+  $("head").textContent = "PC TIME → AUDIO LTC · 29.97 fps " + (st.drop ? "DROP FRAME" : "NON-DROP FRAME");
+  const lv = $("lvl"); lv.style.setProperty("--p", ((lv.value - lv.min) / (lv.max - lv.min) * 100) + "%");
+  $("lvlVal").textContent = `${lv.value} dBFS`;
+  ofsPending();
+  save();
+}
+
+// ---- 出力開始 / 停止
+let wakeLock = null, silentEl = null;
+async function keepAwake() {
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (_) { wakeLock = null; }
+}
+function unlockSilentSwitch() {
+  // 消音スイッチがオンでも鳴らす（iOS 16.4+）＋古い iOS 向けに無音の <audio> を流す
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (_) {}
+  try {
+    if (!silentEl) {
+      const sr = 8000, n = 800, b = new ArrayBuffer(44 + n * 2), v = new DataView(b);
+      const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+      w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); v.setUint32(16, 16, true);
+      v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
+      v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+      silentEl = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" })));
+      silentEl.loop = true; silentEl.setAttribute("playsinline", "");
+    }
+    silentEl.play().catch(() => {});
+  } catch (_) {}
+}
+
+async function toggle() {
+  if (eng.running) {
+    eng.stop();
+    if (silentEl) silentEl.pause();
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  } else {
+    unlockSilentSwitch();
+    applyUI();
+    let origin = null;
+    if (st.regen && st.hold && st.hold.drop === st.drop) { origin = { preset: st.hold.label }; st.hold = null; }
+    else if (st.regen && st.gen && st.gen.drop === st.drop) origin = { gen: st.gen };
+    else if (st.regen) origin = { regen: true };
+    try {
+      $("startBtn").disabled = true;
+      await eng.start(origin);
+      keepAwake();
+      st.msg = "";
+    } catch (e) {
+      st.msg = "音声を開始できませんでした: " + e.message;
+      eng.stop();
+    } finally { $("startBtn").disabled = false; }
+  }
+  updateButtons();
+}
+
+function updateButtons() {
+  const b = $("startBtn");
+  b.textContent = eng.running ? "■ 停止" : "▶ 出力開始";
+  b.classList.toggle("on", eng.running);
+  const r = $("regenBtn");
+  r.classList.toggle("on", st.regen);
+  r.innerHTML = st.regen ? "REGEN<br>ON" : "REGEN<br>(JAM)";
+}
+
+// ---- REGEN / PRESET / START / PC TIMEに戻す
+function setRegen(on) {
+  if (st.regen === on) return;
+  st.regen = on;
+  if (eng.running) eng.setMode(on ? { freerun: true } : { freerun: false });
+  if (!on) st.hold = null;
+  updateButtons();
+}
+function parsePreset() {
+  try {
+    const tc = parseTC($("preset").value, st.drop);
+    $("preset").classList.remove("bad");
+    $("preset").value = tcString(tc, st.drop);
+    st.msg = ""; save();
+    return { label: tcToLabel(tc, st.drop), drop: st.drop };
+  } catch (e) {
+    $("preset").classList.add("bad");
+    st.msg = "プリセット: " + e.message;
+    return null;
+  }
+}
+function doPreset() {
+  const p = parsePreset(); if (!p) return;
+  setRegen(true);
+  st.hold = p;
+}
+function doPresetStart() {
+  const p = st.hold || parsePreset(); if (!p) return;
+  st.hold = null;
+  if (eng.running) {
+    st.regen = true; updateButtons();
+    eng.setMode({ freerun: true, P0: p.label });
+  } else {
+    setRegen(true);
+    st.gen = { e0: Date.now() / 1000, P: p.label, drop: p.drop };
+  }
+}
+function backToPC() {
+  setRegen(false);
+  st.hold = null; st.gen = null; st.msg = "";
+}
+
+// ---- DF / NDF（REGEN 中は同じ TC のまま数え方だけ変える）
+function setDrop(drop) {
+  if (drop === st.drop) return;
+  const conv = P => { const m = Math.floor(P); return tcToLabel(labelToTC(m, st.drop), drop) + (P - m); };
+  if (eng.running && st.regen) {
+    const P = eng.posAt(eng.nextS / eng.sr, eng.off);
+    st.drop = drop; eng.drop = drop; eng.cache.clear();
+    eng.setMode({ freerun: true, P0: conv(P) });
+  } else {
+    if (st.gen) st.gen = { e0: st.gen.e0, P: conv(st.gen.P), drop };
+    if (st.hold) st.hold = null;
+    st.drop = drop; eng.drop = drop; eng.cache.clear();
+  }
+  const v = $("preset").value;
+  try { $("preset").value = tcString(parseTC(v, drop), drop); } catch (_) {}
+  applyUI();
+}
+
+// ---- PC TIME補正
+function ofsPending() {
+  const v = parseFloat($("ofs").value);
+  const pend = !(Number.isFinite(v) && Math.abs(v / 1000 - eng.userOffset) < 1e-9);
+  $("ofsSet").classList.toggle("pend", pend);
+}
+function setOffset() {
+  let v = parseFloat($("ofs").value);
+  if (!Number.isFinite(v)) { $("ofs").value = Math.round(eng.userOffset * 1000); ofsPending(); return; }
+  v = Math.max(-2000, Math.min(2000, v));
+  $("ofs").value = v;
+  eng.userOffset = v / 1000;
+  ofsPending(); save();
+}
+
+// ---- 表示（約 30 回/秒）
+function fmtDiff(d) {
+  const fr = d * FPS;
+  if (Math.abs(d) < 10) return `${(fr >= 0 ? "+" : "") + fr.toFixed(1)} フレーム（${(d >= 0 ? "+" : "") + (d * 1000).toFixed(0)} ms）`;
+  const a = Math.abs(d);
+  return `${d >= 0 ? "+" : "-"}${Math.floor(a / 3600)}:${p2(Math.floor(a % 3600 / 60))}:${(a % 60).toFixed(1).padStart(4, "0")}`;
+}
+// 大きい TC を画面幅いっぱいに（フォントの幅は機種で違うので実測して合わせる）
+function fitTC() {
+  const el = $("tc"), w = el.parentElement.clientWidth, cw = el.getBoundingClientRect().width;
+  if (!w || !cw || (cw <= w && cw > w * 0.94)) return;      // ちょうど収まっていれば何もしない
+  const fs = parseFloat(getComputedStyle(el.parentElement).fontSize);
+  el.parentElement.style.fontSize = Math.max(24, Math.min(110, Math.floor(fs * w / cw * 0.97))) + "px";
+}
+let lastDraw = 0;
+function draw(ts) {
+  requestAnimationFrame(draw);
+  if (ts - lastDraw < 30) return;
+  lastDraw = ts;
+  const t = Date.now() / 1000, drop = st.drop;
+  const pcSec = ssm(t, st.utc);
+  let P = eng.running ? eng.onAir() : null;
+  const hold = (!eng.running && st.hold && st.hold.drop === drop) ? st.hold : null;
+  if (hold) P = hold.label;
+  else if (P == null && st.regen && st.gen && st.gen.drop === drop) P = st.gen.P + (t - st.gen.e0) * FPS;
+  else if (P != null) st.gen = { e0: t, P, drop };
+  let ofsUsed = false;
+  if (P == null) {                                   // PC TIME（補正込み）から計算
+    const sec = ssm(t + eng.userOffset, st.utc), f = sec * FPS, n = Math.floor(f);
+    P = frameLabel(n, drop) + (f - n);
+    ofsUsed = true;
+  } else if (eng.running && !st.regen) ofsUsed = true;
+  const m = Math.floor(P), tc = labelToTC(m, drop);
+  const tcSec = tc[0] * 3600 + tc[1] * 60 + tc[2] + (tc[3] + (P - m)) / 30;
+  let d = tcSec - pcSec; if (d > 43200) d -= 86400; else if (d < -43200) d += 86400;
+  $("tc").textContent = tcString(tc, drop);
+  fitTC();
+  const dt = new Date(t * 1000);
+  const ymd = st.utc
+    ? `${dt.getUTCFullYear()}-${p2(dt.getUTCMonth() + 1)}-${p2(dt.getUTCDate())} ${p2(dt.getUTCHours())}:${p2(dt.getUTCMinutes())}:${p2(dt.getUTCSeconds())}`
+    : `${dt.getFullYear()}-${p2(dt.getMonth() + 1)}-${p2(dt.getDate())} ${p2(dt.getHours())}:${p2(dt.getMinutes())}:${p2(dt.getSeconds())}`;
+  $("clock").textContent = `PC TIME  ${ymd}.${String(dt.getMilliseconds()).padStart(3, "0")}${st.utc ? " UTC" : ""}`;
+  const fr = d * FPS, uo = eng.userOffset;
+  let note = "";
+  if (hold) note = "  ／ PRESET 待機中（START か出力開始でこの値から）";
+  else if (st.regen) note = (eng.running ? "  ／ REGEN 中（合わせ直さない）" : "  ／ REGEN 中（停止中も内部で継続）")
+                            + (Math.abs(uo) >= 0.0005 ? "・PC TIME補正は無効" : "");
+  else if (ofsUsed && Math.abs(uo) >= 0.0005) note = `  （PC TIME補正 ${(uo >= 0 ? "+" : "") + (uo * 1000).toFixed(0)} ms 込み）`;
+  $("diff").textContent = `TC − PC TIME  ${fmtDiff(d)}` + (fr >= 0.5 ? "  TC が進み" : fr <= -0.5 ? "  TC が遅れ" : "") + note;
+  $("diff").classList.toggle("warn", Math.abs(fr) >= 3);
+  $("lamp").classList.toggle("on", eng.running && Math.floor(t * 2) % 2 === 0);
+  $("msg").textContent = st.msg;
+
+  const lines = [];
+  if (eng.running) {
+    const c = eng.ctx, lat = (c.outputLatency || 0) + (c.baseLatency || 0);
+    lines.push(`【音声】出力中  ${c.sampleRate} Hz  ${eng.chan === "LR" ? "L+R" : eng.chan}   出力遅延 ${lat ? (lat * 1000).toFixed(1) + " ms" : "不明"}` +
+               `   時刻合わせ ${eng.tsSupported ? "出力タイムスタンプ" : "推定"}`);
+    lines.push(`       TC補正(ジャム) ${eng.jams} 回` + (eng.underruns ? `   ※途切れ ${eng.underruns} 回（画面ロック・アプリ切替で発生）` : "") +
+               `   画面ロック防止 ${wakeLock ? "有効" : "無効（自動ロックを「なし」に）"}`);
+  }
+  $("status").textContent = lines.join("\n");
+}
+
+// ---- イベント
+$("startBtn").onclick = toggle;
+$("regenBtn").onclick = () => setRegen(!st.regen);
+$("presetBtn").onclick = doPreset;
+$("pstartBtn").onclick = doPresetStart;
+$("pcBtn").onclick = backToPC;
+$("preset").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); doPreset(); $("preset").blur(); } });
+for (const b of $("dfSeg").children) b.onclick = () => setDrop(b.dataset.v === "DF");
+for (const b of $("chSeg").children) b.onclick = () => { eng.chan = b.dataset.v; applyUI(); };
+$("utcChk").onclick = () => { st.utc = !st.utc; applyUI(); };
+$("lvl").addEventListener("input", applyUI);
+$("ofs").addEventListener("input", ofsPending);
+$("ofs").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); setOffset(); $("ofs").blur(); } });
+$("ofsSet").onclick = setOffset;
+$("ofsClr").onclick = () => { $("ofs").value = 0; setOffset(); };
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && eng.running) {
+    keepAwake();
+    eng.ctx.resume().catch(() => {});
+  }
+});
+
+// オフライン対応（GitHub Pages など自分のサイトに置いたとき。claude.ai のページでは使われない）
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost") && !/claude\.ai|claudeusercontent/.test(location.hostname)) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+load(); applyUI(); updateButtons();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

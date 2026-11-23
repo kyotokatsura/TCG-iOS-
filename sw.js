@@ -1,6 +1,6 @@
 // オフラインでも開けるように、アプリのファイルを iPhone に保存しておく
 // index.html などを更新したら VERSION を変える（次にネットにつながったとき新しい版に入れ替わる）
-const VERSION = "ltc-v1";
+const VERSION = "ltc-v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
